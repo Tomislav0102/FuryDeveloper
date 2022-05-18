@@ -1,0 +1,13 @@
+fileFormatVersion: 2
+guid: e303f4a9e517ad14d8f3ae8c06682044
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences:
+  - poljePrefab: {fileID: 7699044321664476006, guid: a25d9bca621f0fc478a2c02a5ff7f933, type: 3}
+  - parPrefab: {instanceID: 0}
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
