@@ -12,28 +12,28 @@ namespace PrviZadatak
         GameManager gm;
         Transform myTransform;
         Rigidbody2D r2D;
-        [SerializeField] SpriteRenderer spriteBlokNosi; //ovaj child se aktivira ako nosi blok
-        [SerializeField] Collider2D[] posudaCols; //mete gdje blkokve treba odnijeti
-        bool _nosiBlok;
-        bool NosiBlok
+        [SerializeField] SpriteRenderer spriteBlokCarry; //ovaj child se aktivira ako nosi blok
+        [SerializeField] Collider2D[] containerCols; //mete gdje blkokve treba odnijeti
+        bool _carryBlok;
+        bool CarryBlok
         {
             get
             {
-                return _nosiBlok;
+                return _carryBlok;
             }
             set
             {
-                _nosiBlok = value;
-                spriteBlokNosi.enabled = _nosiBlok;
-                if (!_nosiBlok)
+                _carryBlok = value;
+                spriteBlokCarry.enabled = _carryBlok;
+                if (!_carryBlok)
                 {
-                    spriteBlokNosi.color = Color.white;
+                    spriteBlokCarry.color = Color.white;
                 }
             }
         }
         [SerializeField] LayerMask lejerBlok;
-        Collider2D[] hits2D;
-        Transform meta; //moze biti null (na sceni nema ni jednog bloka), blok (ako ne nosi nista) ili posuda (nosi blok)
+        Collider2D[] colliders2D;
+        Transform targe; //moze biti null (na sceni nema ni jednog bloka), blok (ako ne nosi nista) ili posuda (nosi blok)
         float _hor;
         float Hor //odreduje smjer kretanja. format je 'property' jer utjece na localScale.x, sto stvara iluziju da je robot okrenut na neku stranu
         {
@@ -48,7 +48,7 @@ namespace PrviZadatak
                 else if (_hor > 0f) myTransform.localScale = new Vector3(1f, 2f, 1f);
             }
         }
-        [SerializeField] float brzina;
+        [SerializeField] float speed;
 
         private void Awake()
         {
@@ -58,7 +58,7 @@ namespace PrviZadatak
         }
         private void Start()
         {
-            NosiBlok = false;
+            CarryBlok = false;
         }
 
         /// <summary>
@@ -66,10 +66,10 @@ namespace PrviZadatak
         /// </summary>
         private void Update()
         {
-            if (meta == null) Hor = 0f;
+            if (targe == null) Hor = 0f;
             else
             {
-                Hor = meta.position.x - myTransform.position.x;
+                Hor = targe.position.x - myTransform.position.x;
                 Hor = Mathf.Clamp(Hor, -1f, 1f);
             }
         }
@@ -79,14 +79,14 @@ namespace PrviZadatak
         /// </summary>
         private void FixedUpdate()
         {
-            r2D.velocity = Hor * brzina * Vector2.right;
+            r2D.velocity = Hor * speed * Vector2.right;
 
-            if (NosiBlok) return;
-            if (meta != null) return;
+            if (CarryBlok) return;
+            if (targe != null) return;
 
-            hits2D = Physics2D.OverlapBoxAll(Vector2.up * 2f, new Vector2(20f, 4f), 0f, lejerBlok);
-            if (hits2D.Length <= 0) return;
-            meta = hits2D[Random.Range(0, hits2D.Length)].transform;
+            colliders2D = Physics2D.OverlapBoxAll(Vector2.up * 2f, new Vector2(20f, 4f), 0f, lejerBlok);
+            if (colliders2D.Length <= 0) return;
+            targe = colliders2D[Random.Range(0, colliders2D.Length)].transform;
 
         }
 
@@ -96,27 +96,27 @@ namespace PrviZadatak
         /// <param name="collision">blokovi ili posude</param>
         private void OnTriggerEnter2D(Collider2D collision)
         {
-            if (NosiBlok)
+            if (CarryBlok)
             {
-                if(collision == posudaCols[0]) //crvena
+                if(collision == containerCols[0]) //crvena
                 {
-                    if (spriteBlokNosi.color != gm.crvena) return;
+                    if (spriteBlokCarry.color != gm.redColor) return;
                     Istovar();
                 }
-                else if (collision == posudaCols[1]) //plava
+                else if (collision == containerCols[1]) //plava
                 {
-                    if (spriteBlokNosi.color != gm.plava) return;
+                    if (spriteBlokCarry.color != gm.blueColor) return;
                     Istovar();
                 }
             }
             else if(collision.TryGetComponent<Blok>(out Blok kol))
             {
-                if (kol.transform != meta) return;
+                if (kol.transform != targe) return;
 
-                spriteBlokNosi.color = kol.Boja;
-                NosiBlok = true;
-                if (spriteBlokNosi.color == gm.crvena) meta = posudaCols[0].transform;
-                else meta = posudaCols[1].transform;
+                spriteBlokCarry.color = kol.ColorBlok;
+                CarryBlok = true;
+                if (spriteBlokCarry.color == gm.redColor) targe = containerCols[0].transform;
+                else targe = containerCols[1].transform;
                 kol.gameObject.SetActive(false);
             }
 
@@ -127,9 +127,9 @@ namespace PrviZadatak
         /// </summary>
         private void Istovar()
         {
-            NosiBlok = false;
-            gm.trenutniBrojBlokova--;
-            meta = null;
+            CarryBlok = false;
+            gm.currentBlokNum--;
+            targe = null;
         }
     }
 }

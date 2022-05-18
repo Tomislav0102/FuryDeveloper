@@ -14,20 +14,20 @@ namespace DrugiZadatak
         public static GameManager gm;
         [SerializeField] GridLayoutGroup gridLayout;
         public int dimenzije;
-        Polje[,] polja;
+        TileData[,] polja;
         [SerializeField] TextMeshProUGUI prikazGlavni;
         const int disRavno = 10;
         const int disDijagonal = 14;
 
-        List<Polje> otvorena;
-        List<Polje> zatvorena;
-        List<Polje> krajevi = new List<Polje>();
+        List<TileData> otvorena;
+        List<TileData> zatvorena;
+        List<TileData> krajevi = new List<TileData>();
         bool postojiKraj;
         private void Awake()
         {
             gm = this;
             dimenzije = gridLayout.constraintCount;
-            polja = new Polje[dimenzije, dimenzije];
+            polja = new TileData[dimenzije, dimenzije];
         }
         private void Start()
         {
@@ -45,31 +45,31 @@ namespace DrugiZadatak
         {
             if (Input.GetKeyDown(KeyCode.Escape)) Application.Quit();
         }
-        public void UpisPolja(Polje _plj)
+        public void UpisPolja(TileData _plj)
         {
             polja[_plj.koor.x, _plj.koor.y] = _plj;
-            if (_plj.Vrsta == VrstaTile.Kraj)
+            if (_plj.Tiletype == TileType.Exit)
             {
                 krajevi.Add(_plj);
                 postojiKraj = true;
             }
         }
-        public void OdrediPut(Polje _poc)
+        public void OdrediPut(TileData _poc)
         {
             if (!postojiKraj)
             {
                 krajevi.Add(polja[0, 0]);
-                polja[0, 0].Vrsta = VrstaTile.Kraj;
+                polja[0, 0].Tiletype = TileType.Exit;
                 postojiKraj = true;
             }
             for (int i = 0; i < dimenzije; i++)
             {
                 for (int j = 0; j < dimenzije; j++)
                 {
-                    if (polja[i, j].Vrsta == VrstaTile.Prohodno) polja[i, j].sprite.color = Color.white;
+                    if (polja[i, j].Tiletype == TileType.Walkable) polja[i, j].spriteTile.color = Color.white;
                 }
             }
-            List<Polje> konacniPut = new List<Polje>();
+            List<TileData> konacniPut = new List<TileData>();
             List<int> udaljenostiDoKrajeva = new List<int>();
             for (int i = 0; i < krajevi.Count; i++)
             {
@@ -88,9 +88,9 @@ namespace DrugiZadatak
                 if (udaljenostiDoKrajeva[i] == najkraci)
                 {
                     konacniPut = Put(_poc, krajevi[i]);
-                    foreach (Polje item in konacniPut)
+                    foreach (TileData item in konacniPut)
                     {
-                        if (item.Vrsta == VrstaTile.Prohodno) item.sprite.color = Color.green;
+                        if (item.Tiletype == TileType.Walkable) item.spriteTile.color = Color.green;
                     }
                     return;
                 }
@@ -101,20 +101,20 @@ namespace DrugiZadatak
             prikazGlavni.text = "Nema izlaza sa te pozicije! Klikni na neku drugu poziciju.";
             Invoke(nameof(MetodaPrikaziUpute), 5f);
         }
-        List<Polje> Put(Polje _poc, Polje _zav)
+        List<TileData> Put(TileData _poc, TileData _zav)
         {
-            otvorena = new List<Polje>();
+            otvorena = new List<TileData>();
             otvorena.Add(_poc);
-            zatvorena = new List<Polje>();
+            zatvorena = new List<TileData>();
 
             for (int i = 0; i < dimenzije; i++) //resetiranje polja
             {
                 for (int j = 0; j < dimenzije; j++)
                 {
-                    if (polja[i, j].Vrsta != VrstaTile.Zid)
+                    if (polja[i, j].Tiletype != TileType.NotWalkable)
                     {
                         polja[i, j].Scost = int.MaxValue;
-                        polja[i, j].prethodnoPolje = null;
+                        polja[i, j].previousTile = null;
 
                     }
                 }
@@ -125,7 +125,7 @@ namespace DrugiZadatak
 
             while (otvorena.Count > 0)
             {
-                Polje radni = P_najmanjiTOT(otvorena);
+                TileData radni = P_najmanjiTOT(otvorena);
                 if(radni == _zav)
                 {
                     //zavrsetak
@@ -133,14 +133,14 @@ namespace DrugiZadatak
                 }
                 otvorena.Remove(radni);
                 zatvorena.Add(radni);
-                foreach (Polje item in Susjedi(radni.koor))
+                foreach (TileData item in Susjedi(radni.koor))
                 {
                     if (zatvorena.Contains(item)) continue;
 
                     int kostSusjed = radni.Scost + Udaljenost(radni.koor, item.koor);
                     if(kostSusjed < item.Scost)
                     {
-                        item.prethodnoPolje = radni;
+                        item.previousTile = radni;
                         item.Scost = kostSusjed;
                         item.Ecost = Udaljenost(item.koor, _zav.koor);
 
@@ -151,9 +151,9 @@ namespace DrugiZadatak
 
             return null;
         }
-        List<Polje> Susjedi(Vector2Int _koor)
+        List<TileData> Susjedi(Vector2Int _koor)
         {
-            List<Polje> lll = new List<Polje>();
+            List<TileData> lll = new List<TileData>();
 
             for (int i = -1; i < 2; i++)
             {
@@ -167,28 +167,28 @@ namespace DrugiZadatak
             {
                 if (x == 0 && y == 0) return false;
                 if (x + _koor.x < 0 || y + _koor.y < 0 || x + _koor.x > dimenzije - 1 || y + _koor.y > dimenzije - 1) return false;
-                if (polja[x + _koor.x, y + _koor.y].Vrsta == VrstaTile.Zid) return false;
+                if (polja[x + _koor.x, y + _koor.y].Tiletype == TileType.NotWalkable) return false;
                 return true;
             }
 
             return lll;
         }
-        List<Polje> UkupniPut(Polje zavrsnoPolje)
+        List<TileData> UkupniPut(TileData zavrsnoPolje)
         {
-            List<Polje> ll = new List<Polje>();
+            List<TileData> ll = new List<TileData>();
             ll.Add(zavrsnoPolje);
-            Polje radno = zavrsnoPolje;
-            while (radno.prethodnoPolje != null)
+            TileData radno = zavrsnoPolje;
+            while (radno.previousTile != null)
             {
-                ll.Add(radno.prethodnoPolje);
-                radno = radno.prethodnoPolje;
+                ll.Add(radno.previousTile);
+                radno = radno.previousTile;
             }
             ll.Reverse();
             return ll;
         }
-        Polje P_najmanjiTOT(List<Polje> _polje)
+        TileData P_najmanjiTOT(List<TileData> _polje)
         {
-            Polje najmanji = _polje[0];
+            TileData najmanji = _polje[0];
             for (int i = 0; i < _polje.Count; i++)
             {
                 if (_polje[i].Totcost() < najmanji.Totcost()) najmanji = _polje[i];

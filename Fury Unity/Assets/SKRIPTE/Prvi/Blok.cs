@@ -10,18 +10,18 @@ namespace PrviZadatak
     /// </summary>
     public class Blok : MonoBehaviour
     {
-        [SerializeField] SpriteRenderer sprajt; //samo za boju
-        Color _boja;
-        public Color Boja 
+        [SerializeField] SpriteRenderer sprite; //samo za boju
+        Color _colorBlok;
+        public Color ColorBlok 
         {
             get
             {
-                return _boja;
+                return _colorBlok;
             }
             set
             {
-                _boja = value;
-                sprajt.color = _boja;
+                _colorBlok = value;
+                sprite.color = _colorBlok;
             }
         }
     }

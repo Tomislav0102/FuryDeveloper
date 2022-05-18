@@ -8,14 +8,14 @@ namespace TK
     public class Magic
     {
 
-        public static T[] DjecaGeneralno<T>(Transform tata)
+        public static T[] GetAllChildren<T>(Transform _parent)
         {
-            T[] neki = new T[tata.childCount];
-            for (int i = 0; i < tata.childCount; i++)
+            T[] _temp = new T[_parent.childCount];
+            for (int i = 0; i < _parent.childCount; i++)
             {
-                neki[i] = tata.GetChild(i).GetComponent<T>();
+                _temp[i] = _parent.GetChild(i).GetComponent<T>();
             }
-            return neki;
+            return _temp;
         }
         public static void IzaberiJednoDjete(GameObject[] djeca, bool rdn, int RB)
         {
@@ -49,11 +49,11 @@ namespace TK
 
     namespace Enums
     {
-        public enum VrstaTile
+        public enum TileType
         {
-            Prohodno,
-            Zid,
-            Kraj
+            Walkable,
+            NotWalkable,
+            Exit
         }
     }
 }
